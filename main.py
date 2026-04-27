@@ -89,8 +89,8 @@ class StarUMLParser:
             if line.startswith("'") or line.startswith("@startuml") or line.startswith("@enduml") or line.startswith("!theme"):
                 continue
             
-            # ПОИСК СУЩНОСТИ
-            entity_match = re.match(r'entity\s+(?:"([^"]+)"\s+as\s+)?(\w+)\s*{', line)
+            # ПОИСК СУЩНОСТИ (поддерживаем и entity, и class)
+            entity_match = re.match(r'(?:entity|class)\s+(?:"([^"]+)"\s+as\s+)?(\w+)\s*{', line)
             
             if entity_match:
                 display_name = entity_match.group(1) if entity_match.group(1) else entity_match.group(2)
@@ -371,7 +371,7 @@ def encode_staruml(text: str) -> str:
 
 
 # ============================================================================
-# HTML ШАБЛОН
+# HTML ШАБЛОН (с исправленными примерами)
 # ============================================================================
 
 HTML_TEMPLATE = """<!DOCTYPE html>
@@ -669,7 +669,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 ' Диаграмма - Номенклатура и заказы
 ' =============================
 
-entity "Номенклатура" as nomen {
+class "Номенклатура" as nomen {
   * Код товара : int <<PK>>
   --
   Наименование : string
@@ -677,7 +677,7 @@ entity "Номенклатура" as nomen {
   Поставщик : string
 }
 
-entity "Заказ клиента" as "order" {
+class "Заказ клиента" as order {
   * Номер заказа : int <<PK>>
   --
   Дата заказа : datetime
@@ -686,7 +686,7 @@ entity "Заказ клиента" as "order" {
   Склад : string
 }
 
-entity "Поступление товаров" as incoming {
+class "Поступление товаров" as incoming {
   * Номер поставки : int <<PK>>
   --
   Дата поставки : datetime
@@ -696,7 +696,7 @@ entity "Поступление товаров" as incoming {
   Код товара : int <<FK>>
 }
 
-entity "Реализация товаров" as outgoing {
+class "Реализация товаров" as outgoing {
   * Номер отгрузки : int <<PK>>
   --
   Дата отгрузки : datetime
@@ -704,7 +704,7 @@ entity "Реализация товаров" as outgoing {
   Код товара : int <<FK>>
 }
 
-entity "Остатки на складах" as remains {
+class "Остатки на складах" as remains {
   * Склад : string
   * Код товара : int <<FK>>
   * Номер партии : string
@@ -717,7 +717,7 @@ nomen ||--o{ incoming
 nomen ||--o{ outgoing
 incoming ||--o{ remains
 outgoing ||--o{ remains
-"order" ||--|| outgoing
+order ||--|| outgoing
 
 @enduml`,
             
@@ -726,7 +726,7 @@ outgoing ||--o{ remains
 ' Диаграмма - Роли пользователя
 ' =============================
 
-entity "Пользователь" as User {
+class "Пользователь" as User {
   * id : int <<PK>>
   --
   имя : string
@@ -735,21 +735,21 @@ entity "Пользователь" as User {
   тип_пользователя : string
 }
 
-entity "Постоянный" as Regular {
+class "Постоянный" as Regular {
   * id : int <<PK, FK>>
   --
   последний_визит : datetime
   аватар : string
 }
 
-entity "Модератор" as Moderator {
+class "Модератор" as Moderator {
   * id : int <<PK, FK>>
   --
   уровень_прав : int
   дата_назначения : datetime
 }
 
-entity "Гость" as Guest {
+class "Гость" as Guest {
   * id : int <<PK, FK>>
   --
   срок_действия_ссылки : datetime
@@ -767,7 +767,7 @@ User ||--o| Guest
 ' Диаграмма - Видеоконференции
 ' =============================
 
-entity users {
+class users {
   * id : int <<PK>>
   --
   username : varchar
@@ -776,7 +776,7 @@ entity users {
   created_at : timestamp
 }
 
-entity rooms {
+class rooms {
   * id : int <<PK>>
   --
   name : varchar
@@ -785,14 +785,14 @@ entity rooms {
   is_active : boolean
 }
 
-entity participants {
+class participants {
   * user_id : int <<PK, FK>>
   * room_id : int <<PK, FK>>
   --
   joined_at : timestamp
 }
 
-entity devices {
+class devices {
   * id : int <<PK>>
   --
   user_id : int <<FK>>
@@ -800,7 +800,7 @@ entity devices {
   device_name : varchar
 }
 
-entity messages {
+class messages {
   * id : int <<PK>>
   --
   content : text
@@ -982,7 +982,7 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run(
         app, 
-        host="0.0.0.0",  # Важно: для Render нужно 0.0.0.0
+        host="0.0.0.0",
         port=port,
         log_level="info"
     )
